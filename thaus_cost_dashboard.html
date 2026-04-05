@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thaus — Cost Dashboard Q1 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  /* ── CTA Brand Palette ──
+     #008C4A  brand green   — accents, active states, positive indicators
+     #AAB8AC  sage          — backgrounds, prev-month bars, dividers
+     #D3A16F  sand          — callouts, amber KPI, trend tab, increase indicator
+     #8C8F90  grey          — body text, sub-headers, neutral labels
+     #F5F6F5  off-white     — page background
+     #2F353A  charcoal      — headlines, header, dark panels, table headers
+  */
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', 'TH Sarabun New', sans-serif;
+    background: #F5F6F5;
+    color: #2F353A;
+    font-size: 14px;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #2F353A 0%, #4A5560 100%);
+    color: white;
+    padding: 20px 32px 0;
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.3px; }
+  .header .subtitle { font-size: 13px; opacity: 0.75; margin-top: 3px; }
+  .header .updated  { font-size: 12px; opacity: 0.55; }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    padding-top: 12px;
+    overflow-x: auto;
+  }
+  .tab {
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.75);
+    border: none;
+    padding: 9px 22px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 6px 6px 0 0;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab:hover { background: rgba(255,255,255,0.22); }
+  .tab.active { background: white; color: #2F353A; font-weight: 700; }
+  .tab.trend-tab {
+    margin-left: auto;
+    background: rgba(211,161,111,0.22);
+    color: rgba(255,255,255,0.9);
+  }
+  .tab.trend-tab.active { background: #D3A16F; color: #2F353A; }
+
+  /* ── Main ── */
+  .main { padding: 24px 32px; max-width: 1400px; margin: 0 auto; }
+
+  /* ── Project filter ── */
+  .project-filter-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: white;
+    padding: 12px 16px;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  }
+  .filter-label {
+    font-size: 11px;
+    color: #8C8F90;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-right: 4px;
+    white-space: nowrap;
+  }
+  .proj-btn {
+    background: #F5F6F5;
+    color: #8C8F90;
+    border: 1.5px solid #E0E3E0;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 20px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .proj-btn:hover { background: #EDF5F0; border-color: #008C4A; color: #006B38; }
+  .proj-btn.active { background: #2F353A; color: white; border-color: #2F353A; font-weight: 600; }
+
+  /* ── KPI cards ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .kpi {
+    background: white;
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    border-left: 4px solid #008C4A;
+  }
+  .kpi.sand { border-left-color: #D3A16F; }
+  .kpi.sage { border-left-color: #AAB8AC; }
+  .kpi.grey { border-left-color: #8C8F90; }
+  .kpi-label { font-size: 11px; color: #8C8F90; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .kpi-value { font-size: 22px; font-weight: 700; color: #2F353A; }
+  .kpi-sub   { font-size: 11px; color: #8C8F90; margin-top: 4px; }
+
+  /* ── Charts ── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .chart-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  }
+  .chart-card.full-width { grid-column: 1 / -1; }
+  .chart-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2F353A;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #E8EBE8;
+  }
+  canvas { max-height: 300px; }
+
+  /* ── Table ── */
+  .table-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #2F353A; color: white; padding: 10px 12px; text-align: left; font-weight: 600; }
+  th.right { text-align: right; }
+  td { padding: 9px 12px; border-bottom: 1px solid #F0F2F0; }
+  td.right { text-align: right; font-variant-numeric: tabular-nums; }
+  tr:hover td { background: #F5F8F5; }
+  tr.subtotal td { background: #EEF3EE; font-weight: 600; }
+  tr.total td { background: #D3A16F; color: #2F353A; font-weight: 700; }
+
+  /* ── Comparison bars ── */
+  .bar-compare { display: flex; flex-direction: column; gap: 3px; min-width: 120px; }
+  .bar-row { display: flex; align-items: center; gap: 6px; }
+  .bar-row-label { font-size: 10px; color: #8C8F90; width: 28px; text-align: right; flex-shrink: 0; }
+  .bar-bg   { flex: 1; background: #E8EBE8; border-radius: 3px; height: 8px; }
+  .bar-fill      { background: #008C4A; border-radius: 3px; height: 8px; transition: width 0.4s; }
+  .bar-fill.prev { background: #AAB8AC; }
+
+  /* ── View toggling ── */
+  .trend-view { display: none; }
+  .trend-view.visible { display: block; }
+  .month-view { display: none; }
+  .month-view.visible { display: block; }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .main { padding: 16px; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .header { padding: 16px 16px 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>Operations Cost Dashboard</h1>
+      <div class="subtitle">บริษัท ธาอัส จำกัด — Q1 2026 (มกราคม–มีนาคม 2566)</div>
+    </div>
+    <div class="updated">Updated: April 2026</div>
+  </div>
+  <div class="tabs">
+    <button class="tab" onclick="setMonth('January 2026')">January 2026</button>
+    <button class="tab" onclick="setMonth('February 2026')">February 2026</button>
+    <button class="tab active" onclick="setMonth('March 2026')">March 2026</button>
+    <button class="tab trend-tab" onclick="setMonth('__trend__')">Q1 Trend</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Month view -->
+  <div id="month-view" class="month-view visible">
+    <div class="project-filter-row" id="project-filter-row"></div>
+    <div class="kpi-row" id="kpi-row"></div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">ค่าใช้จ่ายตามโครงการ (by Project)</div>
+        <canvas id="chart-project"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title" id="activity-chart-title">กิจกรรมสูงสุด Top 10 (by Activity)</div>
+        <canvas id="chart-activity"></canvas>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="chart-title" id="cat-table-title">สรุปหมวดค่าใช้จ่าย</div>
+      <table>
+        <thead><tr>
+          <th>#</th><th>ประเภทค่าใช้จ่าย</th>
+          <th class="right">ยอด (บาท)</th>
+          <th class="right">เดือนที่แล้ว</th>
+          <th class="right">%</th>
+          <th>เปรียบเทียบ</th>
+        </tr></thead>
+        <tbody id="cat-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Trend view -->
+  <div id="trend-view" class="trend-view">
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">ยอดรวม Q1 2026</div>
+        <div class="kpi-value" id="kpi-q1-total"></div>
+        <div class="kpi-sub">3 เดือน</div>
+      </div>
+      <div class="kpi sage">
+        <div class="kpi-label">เฉลี่ยต่อเดือน</div>
+        <div class="kpi-value" id="kpi-monthly-avg"></div>
+        <div class="kpi-sub">บาท / เดือน</div>
+      </div>
+      <div class="kpi sand">
+        <div class="kpi-label">เดือนสูงสุด</div>
+        <div class="kpi-value" id="kpi-peak-month"></div>
+        <div class="kpi-sub" id="kpi-peak-val"></div>
+      </div>
+      <div class="kpi grey">
+        <div class="kpi-label">การเปลี่ยนแปลง (Jan→Mar)</div>
+        <div class="kpi-value" id="kpi-growth"></div>
+        <div class="kpi-sub">เทียบ Jan 2026</div>
+      </div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card full-width">
+        <div class="chart-title">แนวโน้มค่าใช้จ่ายรายเดือน (Monthly Trend)</div>
+        <canvas id="chart-trend-line"></canvas>
+      </div>
+      <div class="chart-card full-width">
+        <div class="chart-title">เปรียบเทียบหมวดค่าใช้จ่ายรายเดือน Top 8 Categories</div>
+        <canvas id="chart-cat-compare"></canvas>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="chart-title">เปรียบเทียบยอดรวมรายเดือน</div>
+      <table>
+        <thead><tr>
+          <th>เดือน</th><th class="right">ยอดรวม (บาท)</th>
+          <th class="right">เปลี่ยนแปลง</th><th class="right">เอกสาร</th>
+        </tr></thead>
+        <tbody id="trend-table-body"></tbody>
+      </table>
+    </div>
+    <div class="table-card">
+      <div class="chart-title">เปรียบเทียบโครงการ Q1 2026</div>
+      <table>
+        <thead><tr>
+          <th>โครงการ</th>
+          <th class="right">มกราคม</th>
+          <th class="right">กุมภาพันธ์</th>
+          <th class="right">มีนาคม</th>
+          <th class="right">รวม Q1</th>
+        </tr></thead>
+        <tbody id="proj-compare-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   ACTUAL — monthly aggregates (all projects)
+───────────────────────────────────────────── */
+const ACTUAL = {
+  "January 2026": {
+    "total": 406904.52,
+    "byCategory": {
+      "ค่าจ้าง-ค่าบริการ": 199900.93, "ค่าขนย้าย": 48500.0,
+      "ค่าซ่อมบำรุง": 33166.42, "ค่าที่พัก": 32950.0,
+      "ค่าน้ำมันรถยนต์": 31709.36, "ค่าเครื่องมือ-อุปกรณ์ต่อพ่วง": 30000.0,
+      "ค่าน้ำมันรถแทรกเตอร์": 12710.3, "ค่าอุปกรณ์": 7371.71,
+      "ค่าสาธารณูปโภค": 3665.85, "ค่าน้ำมันรถเเทรกเตอร์": 2803.74,
+      "ค่าน้ำดื่ม": 1780.0, "อื่นๆ": 1157.0,
+      "ค่าน้ำ-ค่าไฟ": 1021.21, "อื่นๆ-ตรวจสุขภาพ": 100.0, "ค่าส่งไปรษณีย์": 68.0
+    },
+    "byProject": {
+      "Ingredion ขามทะเลสอ": 363366.35, "Thaus": 31000.0,
+      "Srisangdao": 8991.43, "ปลูกมันสำปะหลัง อิทธิ1 และ waxy R": 2803.74, "Admin": 743.0
+    },
+    "byActivity": {
+      "งานเก็บเกี่ยว-ขุดหัวมัน": 135971.07, "งานเก็บเกี่ยว-ตัดท่อนพันธุ์": 81988.4,
+      "งานเก็บเกี่ยว": 69240.46, "ซ่อมบำรุง": 40166.42,
+      "(ไม่ระบุ)": 37743.0, "เครื่องมือ-อุปกรณ์ต่อพ่วง": 30000.0,
+      "ส่งมอบTERMINATOR 2m.": 8991.43, "งานเตรียมแปลง": 2803.74
+    }
+  },
+  "February 2026": {
+    "total": 498713.19,
+    "byCategory": {
+      "ค่าจ้าง-ค่าบริการ": 335531.52, "ค่าซ่อมบำรุง": 48922.77,
+      "ค่าอุปกรณ์": 33759.33, "ค่าน้ำมันรถยนต์": 33317.78,
+      "ค่าที่พัก": 25000.0, "ค่าน้ำมันรถแทรกเตอร์": 14953.28,
+      "ค่าสาธารณูปโภค": 4002.85, "ค่าน้ำ-ค่าไฟ": 1338.47,
+      "อื่นๆ": 1120.0, "อื่นๆ-ตรวจสุขภาพ": 490.0,
+      "ค่าน้ำมันอื่นๆ": 140.19, "ค่าส่งไปรษณีย์": 137.0
+    },
+    "byProject": {
+      "Ingredion ขามทะเลสอ": 427870.51,
+      "ปลูกมันสำปะหลัง อิทธิ1 และ waxy R": 68923.52,
+      "Ingredions CR3": 1869.16, "Admin": 50.0
+    },
+    "byActivity": {
+      "งานเก็บเกี่ยว-ขุดหัวมัน": 256663.1, "งานเก็บเกี่ยว": 58899.06,
+      "งานเก็บเกี่ยว-ตัดท่อนพันธุ์": 37140.18, "งานปลูกแปลงพันธุ์ต้านทานโรค(R)": 33938.77,
+      "ระบบน้ำ": 32655.73, "ซ่อมบำรุง": 26913.79,
+      "ซ่อมบำรุงเฟ้น": 26728.61, "งานเก็บเกี่ยว-ตัดทำลายต้น": 21525.77,
+      "งานปลูก": 1874.02, "งานเก็บดิน": 1869.16,
+      "งานระบบน้ำ": 455.0, "(ไม่ระบุ)": 50.0
+    }
+  },
+  "March 2026": {
+    "total": 879964.51,
+    "byCategory": {
+      "ค่าจ้าง-ค่าบริการ": 532185.1, "ค่าน้ำมันรถแทรกเตอร์": 50602.83,
+      "ค่าสารเคมี-ยา": 46860.0, "ค่าซ่อมบำรุง": 46270.85,
+      "ค่าสารเคมี-ปุ๋ย": 45000.0, "ค่าอุปกรณ์": 42615.92,
+      "ค่าน้ำมันรถยนต์": 37515.24, "ค่าที่พัก": 31000.0,
+      "ค่าเครื่องมือ-อุปกรณ์ต่อพ่วง": 18000.0, "ค่าขนย้าย": 15500.0,
+      "ค่าขนส่ง": 6000.0, "ค่าสาธารณูปโภค": 4138.18,
+      "อื่นๆ": 1325.0, "ค่าน้ำ-ค่าไฟ": 1201.38,
+      "อื่นๆ-ตรวจสุขภาพ": 1200.0, "ค่าอุปกรณ์สำนักงาน": 285.01, "ค่าส่งไปรษณีย์": 265.0
+    },
+    "byProject": {
+      "Ingredion ขามทะเลสอ": 836826.83,
+      "ปลูกมันสำปะหลัง อิทธิ1 และ waxy R": 40880.8,
+      "Syngenta Tak Fa": 1401.87, "Admin": 855.01
+    },
+    "byActivity": {
+      "ขนย้ายไม้": 260412.37, "งานเก็บเกี่ยว-ขุดหัวมัน": 182744.42,
+      "งานปลูก": 111263.42, "งานเก็บเกี่ยว-ตัดท่อนพันธุ์": 70738.8,
+      "งานเตรียมแปลง": 60628.88, "ซ่อมบำรุง": 49086.89,
+      "งานเก็บเกี่ยวผลผลิต": 42923.02, "ระบบน้ำ": 25567.84,
+      "เครื่องมือ-อุปกรณ์ต่อพ่วง": 18000.0, "งานเตรียมดิน": 16035.86,
+      "ขนย้าย": 15500.0, "Maintenance": 6000.0,
+      "Admin": 5324.56, "งานทำรุ่น": 3958.76,
+      "งานเก็บเกี่ยว-ตัดทำลาย": 3711.34, "(ไม่ระบุ)": 2246.01
+    }
+  }
+};
+
+/* ──────────────────────────────────────────────────────────
+   PROJ_DETAIL — per-project category + activity breakdowns
+   Aggregated from ExpenseSummary "ข้อมูล" sheets (row-level)
+─────────────────────────────────────────────────────────── */
+const PROJ_DETAIL = {
+  "January 2026": {
+    "Admin": {
+      "total": 743.0,
+      "byCategory": { "ค่าน้ำมันรถยนต์": 700.0, "ค่าส่งไปรษณีย์": 43.0 },
+      "byActivity":  { "(ไม่ระบุ)": 743.0 }
+    },
+    "Ingredion ขามทะเลสอ": {
+      "total": 363366.35,
+      "byCategory": {
+        "ค่าจ้าง-ค่าบริการ": 199900.93, "ค่าซ่อมบำรุง": 33166.42,
+        "ค่าที่พัก": 31000.0, "ค่าเครื่องมือ-อุปกรณ์ต่อพ่วง": 30000.0,
+        "ค่าน้ำมันรถยนต์": 26626.18, "ค่าขนย้าย": 17500.0,
+        "ค่าน้ำมันรถแทรกเตอร์": 12710.3, "ค่าอุปกรณ์": 4743.46,
+        "ค่าสาธารณูปโภค": 3665.85, "ค่าน้ำดื่ม": 1780.0,
+        "อื่นๆ": 1127.0, "ค่าน้ำ-ค่าไฟ": 1021.21,
+        "อื่นๆ-ตรวจสุขภาพ": 100.0, "ค่าส่งไปรษณีย์": 25.0
+      },
+      "byActivity": {
+        "งานเก็บเกี่ยว-ขุดหัวมัน": 135971.07, "งานเก็บเกี่ยว-ตัดท่อนพันธุ์": 81988.4,
+        "งานเก็บเกี่ยว": 69240.46, "ซ่อมบำรุง": 40166.42,
+        "เครื่องมือ-อุปกรณ์ต่อพ่วง": 30000.0, "(ไม่ระบุ)": 6000.0
+      }
+    },
+    "Srisangdao": {
+      "total": 8991.43,
+      "byCategory": {
+        "ค่าน้ำมันรถยนต์": 4383.18, "ค่าอุปกรณ์": 2628.25,
+        "ค่าที่พัก": 1950.0, "อื่นๆ": 30.0
+      },
+      "byActivity": { "ส่งมอบTERMINATOR 2m.": 8991.43 }
+    },
+    "Thaus": {
+      "total": 31000.0,
+      "byCategory": { "ค่าขนย้าย": 31000.0 },
+      "byActivity":  { "(ไม่ระบุ)": 31000.0 }
+    },
+    "ปลูกมันสำปะหลัง อิทธิ1 และ waxy R": {
+      "total": 2803.74,
+      "byCategory": { "ค่าน้ำมันรถเเทรกเตอร์": 2803.74 },
+      "byActivity":  { "งานเตรียมแปลง": 2803.74 }
+    }
+  },
+  "February 2026": {
+    "Admin": {
+      "total": 50.0,
+      "byCategory": { "ค่าส่งไปรษณีย์": 50.0 },
+      "byActivity":  { "(ไม่ระบุ)": 50.0 }
+    },
+    "Ingredion ขามทะเลสอ": {
+      "total": 427870.51,
+      "byCategory": {
+        "ค่าจ้าง-ค่าบริการ": 313577.62, "ค่าซ่อมบำรุง": 48922.77,
+        "ค่าที่พัก": 25000.0, "ค่าน้ำมันรถยนต์": 22196.28,
+        "ค่าน้ำมันรถแทรกเตอร์": 8411.22, "ค่าสาธารณูปโภค": 4002.85,
+        "ค่าอุปกรณ์": 2724.3, "ค่าน้ำ-ค่าไฟ": 1338.47,
+        "อื่นๆ": 1120.0, "อื่นๆ-ตรวจสุขภาพ": 490.0, "ค่าส่งไปรษณีย์": 87.0
+      },
+      "byActivity": {
+        "งานเก็บเกี่ยว-ขุดหัวมัน": 256663.1, "งานเก็บเกี่ยว": 58899.06,
+        "งานเก็บเกี่ยว-ตัดท่อนพันธุ์": 37140.18, "ซ่อมบำรุง": 26913.79,
+        "ซ่อมบำรุงเฟ้น": 26728.61, "งานเก็บเกี่ยว-ตัดทำลายต้น": 21525.77
+      }
+    },
+    "Ingredions CR3": {
+      "total": 1869.16,
+      "byCategory": { "ค่าน้ำมันรถยนต์": 1869.16 },
+      "byActivity":  { "งานเก็บดิน": 1869.16 }
+    },
+    "ปลูกมันสำปะหลัง อิทธิ1 และ waxy R": {
+      "total": 68923.52,
+      "byCategory": {
+        "ค่าอุปกรณ์": 31035.03, "ค่าจ้าง-ค่าบริการ": 21953.9,
+        "ค่าน้ำมันรถยนต์": 9252.34, "ค่าน้ำมันรถแทรกเตอร์": 6542.06,
+        "ค่าน้ำมันอื่นๆ": 140.19
+      },
+      "byActivity": {
+        "งานปลูกแปลงพันธุ์ต้านทานโรค(R)": 33938.77, "ระบบน้ำ": 32655.73,
+        "งานปลูก": 1874.02, "งานระบบน้ำ": 455.0
+      }
+    }
+  },
+  "March 2026": {
+    "Admin": {
+      "total": 855.01,
+      "byCategory": {
+        "ค่าน้ำมันรถยนต์": 500.0, "ค่าอุปกรณ์สำนักงาน": 285.01, "ค่าส่งไปรษณีย์": 70.0
+      },
+      "byActivity": { "(ไม่ระบุ)": 855.01 }
+    },
+    "Ingredion ขามทะเลสอ": {
+      "total": 836826.83,
+      "byCategory": {
+        "ค่าจ้าง-ค่าบริการ": 518226.35, "ค่าน้ำมันรถแทรกเตอร์": 50602.83,
+        "ค่าสารเคมี-ยา": 46860.0, "ค่าซ่อมบำรุง": 46270.85,
+        "ค่าสารเคมี-ปุ๋ย": 45000.0, "ค่าน้ำมันรถยนต์": 32398.42,
+        "ค่าที่พัก": 31000.0, "ค่าอุปกรณ์": 18945.82,
+        "ค่าเครื่องมือ-อุปกรณ์ต่อพ่วง": 18000.0, "ค่าขนย้าย": 15500.0,
+        "ค่าขนส่ง": 6000.0, "ค่าสาธารณูปโภค": 4138.18,
+        "อื่นๆ": 1325.0, "ค่าน้ำ-ค่าไฟ": 1201.38,
+        "อื่นๆ-ตรวจสุขภาพ": 1200.0, "ค่าส่งไปรษณีย์": 158.0
+      },
+      "byActivity": {
+        "ขนย้ายไม้": 260412.37, "งานเก็บเกี่ยว-ขุดหัวมัน": 182744.42,
+        "งานปลูก": 100409.22, "งานเก็บเกี่ยว-ตัดท่อนพันธุ์": 70738.8,
+        "งานเตรียมแปลง": 60628.88, "ซ่อมบำรุง": 49086.89,
+        "งานเก็บเกี่ยวผลผลิต": 42923.02, "เครื่องมือ-อุปกรณ์ต่อพ่วง": 18000.0,
+        "งานเตรียมดิน": 16035.86, "ขนย้าย": 15500.0,
+        "Maintenance": 6000.0, "Admin": 5324.56,
+        "งานเก็บเกี่ยว-ตัดทำลาย": 3711.34, "ค่าซ่อมบำรุง": 1570.0,
+        "(ไม่ระบุ)": 1391.0, "งานระบบบน้ำ": 794.39, "งานเก็บเกี่ยว": 154.21
+      }
+    },
+    "Syngenta Tak Fa": {
+      "total": 1401.87,
+      "byCategory": { "ค่าน้ำมันรถยนต์": 1401.87 },
+      "byActivity":  { "ระบบนำร่อง": 1401.87 }
+    },
+    "ปลูกมันสำปะหลัง อิทธิ1 และ waxy R": {
+      "total": 40880.8,
+      "byCategory": {
+        "ค่าอุปกรณ์": 23670.1, "ค่าจ้าง-ค่าบริการ": 13958.75,
+        "ค่าน้ำมันรถยนต์": 3214.95, "ค่าส่งไปรษณีย์": 37.0
+      },
+      "byActivity": {
+        "ระบบน้ำ": 25567.84, "งานปลูก": 10854.2,
+        "งานทำรุ่น": 3958.76, "งานวางระบบน้ำ": 500.0
+      }
+    }
+  }
+};
+
+/* ── Constants ── */
+const MONTHS_ORDER = ["January 2026","February 2026","March 2026"];
+const TOP_CATS = [
+  "ค่าจ้าง-ค่าบริการ","ค่าซ่อมบำรุง","ค่าน้ำมันรถยนต์","ค่าที่พัก",
+  "ค่าอุปกรณ์","ค่าน้ำมันรถแทรกเตอร์","ค่าขนย้าย","ค่าเครื่องมือ-อุปกรณ์ต่อพ่วง"
+];
+
+/* CTA-derived chart colour palette */
+const CHART_COLORS = [
+  "#008C4A","#D3A16F","#8C8F90","#AAB8AC","#2F353A",
+  "#4DAB82","#E8C49B","#6C7074","#C8D0CA","#5A6268",
+  "#006B38","#B8855A","#B2B5B6","#8A9E8C","#3D4348",
+  "#79C9A0","#F0D9B8","#D8D9DA","#E0E5E1","#6B7378"
+];
+
+/* ── State ── */
+let selectedMonth   = 'March 2026';
+let selectedProject = 'all';
+let chartProject = null, chartActivity = null;
+let chartTrendLine = null, chartCatCompare = null;
+
+/* ── Formatters ── */
+function fmt(n) {
+  return new Intl.NumberFormat('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+}
+function fmtShort(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1)+'M';
+  if (n >= 1000)    return Math.round(n/1000)+'K';
+  return Math.round(n).toString();
+}
+
+/* ── Project filter ── */
+function buildProjectFilter() {
+  const allProjects = [...new Set(MONTHS_ORDER.flatMap(m => Object.keys(ACTUAL[m].byProject)))];
+  allProjects.sort((a,b) => {
+    const ta = MONTHS_ORDER.reduce((s,m)=>s+(ACTUAL[m].byProject[a]||0),0);
+    const tb = MONTHS_ORDER.reduce((s,m)=>s+(ACTUAL[m].byProject[b]||0),0);
+    return tb-ta;
+  });
+
+  const row = document.getElementById('project-filter-row');
+  row.innerHTML = `<span class="filter-label">ดูโครงการ:</span>`;
+
+  // "All" button
+  const allBtn = document.createElement('button');
+  allBtn.className = 'proj-btn active';
+  allBtn.dataset.proj = 'all';
+  allBtn.textContent = 'ทุกโครงการ';
+  allBtn.addEventListener('click', () => setProject('all'));
+  row.appendChild(allBtn);
+
+  // Per-project buttons
+  allProjects.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'proj-btn';
+    btn.dataset.proj = p;
+    btn.textContent = p;
+    btn.addEventListener('click', () => setProject(p));
+    row.appendChild(btn);
+  });
+}
+
+function setProject(proj) {
+  selectedProject = proj;
+  document.querySelectorAll('.proj-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.proj === proj);
+  });
+  renderMonth(selectedMonth);
+}
+
+/* ── Tab switching ── */
+function setMonth(month) {
+  selectedMonth = month;
+  document.querySelectorAll('.tab').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('onclick')===`setMonth('${month}')`);
+  });
+  if (month === '__trend__') {
+    document.getElementById('month-view').classList.remove('visible');
+    document.getElementById('trend-view').classList.add('visible');
+    renderTrend();
+  } else {
+    document.getElementById('trend-view').classList.remove('visible');
+    document.getElementById('month-view').classList.add('visible');
+    renderMonth(month);
+  }
+}
+
+function destroyChart(c) { if(c) c.destroy(); return null; }
+
+/* ── Month view ── */
+function renderMonth(month) {
+  const data = ACTUAL[month];
+  if (!data) return;
+
+  const monthIdx  = MONTHS_ORDER.indexOf(month);
+  const prevMonth = monthIdx > 0 ? MONTHS_ORDER[monthIdx-1] : null;
+  const prevData  = prevMonth ? ACTUAL[prevMonth] : null;
+
+  /* Resolve dataset — whole month, or project-specific */
+  const isProjFilter = selectedProject !== 'all';
+  const projD        = isProjFilter ? (PROJ_DETAIL[month]?.[selectedProject] || null) : null;
+  const prevProjD    = isProjFilter && prevMonth ? (PROJ_DETAIL[prevMonth]?.[selectedProject] || null) : null;
+
+  const ctxTotal    = isProjFilter ? (projD ? projD.total : 0)         : data.total;
+  const ctxCats     = isProjFilter ? (projD ? projD.byCategory : {})    : data.byCategory;
+  const ctxActs     = isProjFilter ? (projD ? projD.byActivity  : {})   : data.byActivity;
+  const prevCtxTotal = isProjFilter
+    ? (prevProjD ? prevProjD.total : null)
+    : (prevData  ? prevData.total  : null);
+  const prevCtxCats = isProjFilter
+    ? (prevProjD ? prevProjD.byCategory : null)
+    : (prevData  ? prevData.byCategory  : null);
+
+  /* ── KPI tiles ── */
+  const catEntries = Object.entries(ctxCats).sort((a,b)=>b[1]-a[1]);
+  const topCat     = catEntries[0]?.[0] || '—';
+  const topCatAmt  = catEntries[0]?.[1] || 0;
+  const topCatPct  = ctxTotal > 0 ? ((topCatAmt/ctxTotal)*100).toFixed(1) : '0';
+
+  let momClass='', momValHtml='<span style="color:#8C8F90">—</span>', momSubHtml='เดือนแรก';
+  if (prevCtxTotal !== null && prevCtxTotal > 0) {
+    const diff = ctxTotal - prevCtxTotal;
+    const pct  = ((diff/prevCtxTotal)*100).toFixed(1);
+    momClass   = diff >= 0 ? 'sand' : '';
+    const col  = diff >= 0 ? '#B8855A' : '#008C4A';
+    momValHtml = `<span style="color:${col}">${diff>=0?'+':''}${pct}%</span>`;
+    momSubHtml = `${diff>=0?'+':''}฿${fmt(Math.abs(diff))} vs ${prevMonth.split(' ')[0]}`;
+  } else if (prevCtxTotal === null && isProjFilter) {
+    momSubHtml = 'ไม่มีข้อมูลเดือนก่อน';
+  }
+
+  document.getElementById('kpi-row').innerHTML = `
+    <div class="kpi">
+      <div class="kpi-label">${isProjFilter?`ยอดรวม — ${selectedProject}`:'ยอดรวม (Amount)'}</div>
+      <div class="kpi-value">฿${fmt(ctxTotal)}</div>
+      <div class="kpi-sub">${month}</div>
+    </div>
+    <div class="kpi sand">
+      <div class="kpi-label">หมวดสูงสุด</div>
+      <div class="kpi-value" style="font-size:16px;">${topCat}</div>
+      <div class="kpi-sub">฿${fmt(topCatAmt)} (${topCatPct}%)</div>
+    </div>
+    <div class="kpi ${momClass}">
+      <div class="kpi-label">การเปลี่ยนแปลง MoM</div>
+      <div class="kpi-value">${momValHtml}</div>
+      <div class="kpi-sub">${momSubHtml}</div>
+    </div>`;
+
+  /* ── Project bar chart (always shows all projects; highlights selected) ── */
+  chartProject = destroyChart(chartProject);
+  const ctxP = document.getElementById('chart-project').getContext('2d');
+  const projKeys   = Object.keys(data.byProject);
+  const projVals   = Object.values(data.byProject);
+  const projColors = isProjFilter
+    ? projKeys.map(p => p===selectedProject ? '#008C4A' : '#E0E5E1')
+    : CHART_COLORS.slice(0, projKeys.length);
+
+  chartProject = new Chart(ctxP, {
+    type:'bar',
+    data: { labels:projKeys, datasets:[{ label:'ยอดรวม (บาท)', data:projVals, backgroundColor:projColors, borderRadius:4 }] },
+    options: {
+      responsive:true, indexAxis:'y',
+      plugins: {
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label:(ctx)=>` ฿${fmt(ctx.parsed.x)}` } }
+      },
+      scales: {
+        x:{ ticks:{ callback:v=>'฿'+fmtShort(v) }, grid:{ color:'#F0F2F0' } },
+        y:{ ticks:{ font:{size:11} } }
+      }
+    }
+  });
+
+  /* ── Activity doughnut (top 10, synced with project filter) ── */
+  chartActivity = destroyChart(chartActivity);
+  const ctxA = document.getElementById('chart-activity').getContext('2d');
+  const actEntries = Object.entries(ctxActs).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const actLabels  = actEntries.map(e=>e[0]);
+  const actVals    = actEntries.map(e=>e[1]);
+  const actTotal   = actVals.reduce((a,b)=>a+b,0);
+
+  document.getElementById('activity-chart-title').textContent =
+    isProjFilter ? `กิจกรรมสูงสุด Top 10 — ${selectedProject}` : 'กิจกรรมสูงสุด Top 10 (by Activity)';
+
+  chartActivity = new Chart(ctxA, {
+    type:'doughnut',
+    data: { labels:actLabels, datasets:[{ data:actVals, backgroundColor:CHART_COLORS, borderWidth:2, borderColor:'#fff' }] },
+    options: {
+      responsive:true,
+      plugins: {
+        legend:{ position:'right', labels:{ font:{size:10}, boxWidth:10, padding:8 } },
+        tooltip: { callbacks: { label:(ctx)=>` ฿${fmt(ctx.parsed)} (${((ctx.parsed/actTotal)*100).toFixed(1)}%)` } }
+      }
+    }
+  });
+
+  /* ── Category summary table (synced with project filter) ── */
+  document.getElementById('cat-table-title').textContent =
+    isProjFilter ? `สรุปหมวดค่าใช้จ่าย — ${selectedProject}` : 'สรุปหมวดค่าใช้จ่าย';
+
+  const catLabels = Object.keys(ctxCats);
+  const catVals2  = Object.values(ctxCats);
+  const maxBoth   = Math.max(...catVals2, ...(prevCtxCats?Object.values(prevCtxCats):[0]), 1);
+
+  const tbody = document.getElementById('cat-tbody');
+  tbody.innerHTML = '';
+  catLabels.forEach((cat,i) => {
+    const amt      = catVals2[i];
+    const pct      = ctxTotal>0 ? ((amt/ctxTotal)*100).toFixed(1) : '0';
+    const barW     = ((amt/maxBoth)*100).toFixed(1);
+    const prevAmt  = prevCtxCats ? (prevCtxCats[cat]||0) : null;
+    const prevBarW = prevAmt!==null ? ((prevAmt/maxBoth)*100).toFixed(1) : '0';
+
+    let prevCell='—', changeIcon='';
+    if (prevAmt!==null) {
+      prevCell = prevAmt>0 ? `฿${fmt(prevAmt)}` : '—';
+      if (prevAmt>0) {
+        const d = amt-prevAmt;
+        changeIcon = d>0
+          ? `<span style="color:#B8855A;font-size:10px;margin-left:4px;">▲</span>`
+          : d<0
+            ? `<span style="color:#008C4A;font-size:10px;margin-left:4px;">▼</span>`
+            : '';
+      }
+    }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:#8C8F90;">${i+1}</td>
+      <td>${cat}${changeIcon}</td>
+      <td class="right" style="font-weight:600;">฿${fmt(amt)}</td>
+      <td class="right" style="color:#AAB8AC;">${prevCell}</td>
+      <td class="right" style="color:#008C4A;">${pct}%</td>
+      <td>
+        <div class="bar-compare">
+          <div class="bar-row">
+            <span class="bar-row-label" style="color:#008C4A;font-weight:600;">ปัจจุบัน</span>
+            <div class="bar-bg"><div class="bar-fill" style="width:${barW}%"></div></div>
+          </div>
+          ${prevCtxCats?`<div class="bar-row">
+            <span class="bar-row-label">ก่อนหน้า</span>
+            <div class="bar-bg"><div class="bar-fill prev" style="width:${prevBarW}%"></div></div>
+          </div>`:''}
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  const totalTr = document.createElement('tr');
+  totalTr.className = 'total';
+  const prevTotalDisp = prevCtxTotal!==null && prevCtxTotal>0 ? `฿${fmt(prevCtxTotal)}` : '—';
+  totalTr.innerHTML = `<td></td><td><strong>รวมทั้งหมด</strong></td>
+    <td class="right">฿${fmt(ctxTotal)}</td>
+    <td class="right">${prevTotalDisp}</td>
+    <td class="right">100%</td><td></td>`;
+  tbody.appendChild(totalTr);
+}
+
+/* ── Trend view ── */
+function renderTrend() {
+  const totals  = MONTHS_ORDER.map(m=>ACTUAL[m].total);
+  const q1Total = totals.reduce((a,b)=>a+b,0);
+  const avg     = q1Total/MONTHS_ORDER.length;
+  const peakIdx = totals.indexOf(Math.max(...totals));
+  const growth  = ((totals[totals.length-1]-totals[0])/totals[0]*100).toFixed(1);
+
+  document.getElementById('kpi-q1-total').textContent    = '฿'+fmt(q1Total);
+  document.getElementById('kpi-monthly-avg').textContent = '฿'+fmt(avg);
+  document.getElementById('kpi-peak-month').textContent  = MONTHS_ORDER[peakIdx].split(' ')[0];
+  document.getElementById('kpi-peak-val').textContent    = '฿'+fmt(totals[peakIdx]);
+  document.getElementById('kpi-growth').textContent      = (growth>0?'+':'')+growth+'%';
+
+  chartTrendLine = destroyChart(chartTrendLine);
+  chartTrendLine = new Chart(document.getElementById('chart-trend-line').getContext('2d'), {
+    type:'line',
+    data: {
+      labels: MONTHS_ORDER.map(m=>m.split(' ')[0]),
+      datasets:[{
+        label:'ยอดรวม (บาท)', data:totals,
+        borderColor:'#008C4A', backgroundColor:'rgba(0,140,74,0.08)',
+        fill:true, tension:0.3,
+        pointBackgroundColor:'#008C4A', pointRadius:6, pointHoverRadius:8, borderWidth:3
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{ tooltip:{ callbacks:{ label:(ctx)=>` ฿${fmt(ctx.parsed.y)}` } } },
+      scales:{
+        y:{ ticks:{ callback:v=>'฿'+fmtShort(v) }, grid:{ color:'#F0F2F0' } },
+        x:{ grid:{ display:false } }
+      }
+    }
+  });
+
+  chartCatCompare = destroyChart(chartCatCompare);
+  const datasets = TOP_CATS.map((cat,i)=>({
+    label:cat,
+    data:MONTHS_ORDER.map(m=>ACTUAL[m].byCategory[cat]||0),
+    backgroundColor:CHART_COLORS[i], borderRadius:2
+  }));
+  chartCatCompare = new Chart(document.getElementById('chart-cat-compare').getContext('2d'), {
+    type:'bar',
+    data:{ labels:MONTHS_ORDER.map(m=>m.split(' ')[0]), datasets },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{ position:'bottom', labels:{ font:{size:11}, boxWidth:12 } },
+        tooltip:{ callbacks:{ label:(ctx)=>` ${ctx.dataset.label}: ฿${fmt(ctx.parsed.y)}` } }
+      },
+      scales:{
+        x:{ stacked:true, grid:{ display:false } },
+        y:{ stacked:true, ticks:{ callback:v=>'฿'+fmtShort(v) }, grid:{ color:'#F0F2F0' } }
+      }
+    }
+  });
+
+  const tbody2 = document.getElementById('trend-table-body');
+  tbody2.innerHTML = '';
+  MONTHS_ORDER.forEach((m,i) => {
+    const t=ACTUAL[m].total;
+    let changeStr='—';
+    if(i>0){
+      const prev=ACTUAL[MONTHS_ORDER[i-1]].total, diff=t-prev, pct=((diff/prev)*100).toFixed(1);
+      changeStr=`<span style="color:${diff>=0?'#B8855A':'#008C4A'}">${diff>=0?'+':''}฿${fmt(diff)} (${pct}%)</span>`;
+    }
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${m}</td><td class="right" style="font-weight:700;">฿${fmt(t)}</td><td class="right">${changeStr}</td><td class="right">—</td>`;
+    tbody2.appendChild(tr);
+  });
+  const totalTr2=document.createElement('tr');
+  totalTr2.className='total';
+  totalTr2.innerHTML=`<td><strong>Q1 2026 รวม</strong></td><td class="right">฿${fmt(q1Total)}</td><td class="right">—</td><td class="right">—</td>`;
+  tbody2.appendChild(totalTr2);
+
+  const allProjs=[...new Set(MONTHS_ORDER.flatMap(m=>Object.keys(ACTUAL[m].byProject)))];
+  const projTotals={};
+  allProjs.forEach(p=>{ projTotals[p]=MONTHS_ORDER.reduce((s,m)=>s+(ACTUAL[m].byProject[p]||0),0); });
+  const sortedProjs=allProjs.sort((a,b)=>projTotals[b]-projTotals[a]);
+
+  const tbody3=document.getElementById('proj-compare-body');
+  tbody3.innerHTML='';
+  sortedProjs.forEach(p=>{
+    const vals=MONTHS_ORDER.map(m=>ACTUAL[m].byProject[p]||0), total=vals.reduce((a,b)=>a+b,0);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${p}</td>${vals.map(v=>`<td class="right">${v>0?'฿'+fmt(v):'—'}</td>`).join('')}<td class="right" style="font-weight:700;">฿${fmt(total)}</td>`;
+    tbody3.appendChild(tr);
+  });
+  const gTotals=MONTHS_ORDER.map(m=>ACTUAL[m].total), gQ1=gTotals.reduce((a,b)=>a+b,0);
+  const totTr=document.createElement('tr');
+  totTr.className='total';
+  totTr.innerHTML=`<td><strong>รวมทุกโครงการ</strong></td>${gTotals.map(v=>`<td class="right">฿${fmt(v)}</td>`).join('')}<td class="right">฿${fmt(gQ1)}</td>`;
+  tbody3.appendChild(totTr);
+}
+
+/* ── Init ── */
+buildProjectFilter();
+setMonth('March 2026');
+</script>
+</body>
+</html>
