@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Thaus — Cost Dashboard Q1 2026</title>
+<title>Thaus — Cost Dashboard YTD 2026</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   /* ── CTA Brand Palette ──
@@ -197,7 +197,7 @@
   <div class="header-top">
     <div>
       <h1>Operations Cost Dashboard</h1>
-      <div class="subtitle">บริษัท ธาอัส จำกัด — Q1 2026 (มกราคม–มีนาคม 2566)</div>
+      <div class="subtitle">บริษัท ธาอัส จำกัด — YTD 2026</div>
     </div>
     <div class="updated">Updated: April 2026</div>
   </div>
@@ -206,7 +206,7 @@
     <button class="tab" onclick="setMonth('February 2026')">February 2026</button>
     <button class="tab" onclick="setMonth('March 2026')">March 2026</button>
     <button class="tab active" onclick="setMonth('April 2026')">April 2026</button>
-    <button class="tab trend-tab" onclick="setMonth('__trend__')">Q1 Trend</button>
+    <button class="tab trend-tab" onclick="setMonth('__trend__')">YTD</button>
   </div>
 </div>
 
@@ -245,7 +245,7 @@
   <div id="trend-view" class="trend-view">
     <div class="kpi-row">
       <div class="kpi">
-        <div class="kpi-label">ยอดรวม Q1 2026</div>
+        <div class="kpi-label">ยอดรวม YTD 2026</div>
         <div class="kpi-value" id="kpi-q1-total"></div>
         <div class="kpi-sub">3 เดือน</div>
       </div>
@@ -286,14 +286,10 @@
       </table>
     </div>
     <div class="table-card">
-      <div class="chart-title">เปรียบเทียบโครงการ Q1 2026</div>
+      <div class="chart-title">เปรียบเทียบโครงการ YTD 2026</div>
       <table>
-        <thead><tr>
+        <thead id="proj-compare-head"><tr>
           <th>โครงการ</th>
-          <th class="right">มกราคม</th>
-          <th class="right">กุมภาพันธ์</th>
-          <th class="right">มีนาคม</th>
-          <th class="right">รวม Q1</th>
         </tr></thead>
         <tbody id="proj-compare-body"></tbody>
       </table>
@@ -383,37 +379,36 @@ const ACTUAL = {
   }
 ,
   "April 2026": {
-    "total": 687246.44,
-    "byCategory": {
-        "ค่าจ้าง-ค่าบริการ": 461091.05,
-        "ค่าน้ำมันรถแทรกเตอร์": 104672.96,
-        "ค่าน้ำมันรถยนต์": 35514.04,
-        "ค่าที่พัก": 31000.0,
-        "ค่าซ่อมบำรุง": 27291.4,
-        "ค่าอุปกรณ์": 16380.14,
-        "ค่าสาธารณูปโภค": 5772.1,
-        "ค่าน้ำ-ค่าไฟ": 1881.47,
-        "อื่นๆ": 1875.98,
-        "อื่นๆ-ตรวจสุขภาพ": 1200.0,
-        "ค่าน้ำมันอื่นๆ": 467.29999999999995,
-        "ค่าส่งไปรษณีย์": 100.0
-    },
-    "byProject": {
-        "Ingredion ขามทะเลสอ": 645336.91,
-        "Admin": 23971.4,
-        "ปลูกมันสำปะหลัง อิทธิ1 และ waxy R": 17938.13
-    },
-    "byActivity": {
-        "งานเตรียมแปลง": 282220.59,
-        "งานเก็บเกี่ยว-ขุดหัวมัน": 152585.51,
-        "งานย้ายไม้": 129896.9,
-        "Admin": 45461.05,
-        "ซ่อมบำรุง": 32898.88,
-        "งานปลูก": 25302.59,
-        "งานเก็บเกี่ยว-ตัดทำลายต้น": 12618.55,
-        "งานจัดการน้ำ": 6262.37
+        "total": 687246.44,
+        "byCategory": {
+            "ค่าจ้าง-ค่าบริการ": 461091.05,
+            "ค่าน้ำมันรถแทรกเตอร์": 104672.96,
+            "ค่าน้ำมันรถยนต์": 35514.04,
+            "ค่าที่พัก": 31000.0,
+            "ค่าซ่อมบำรุง": 27291.4,
+            "ค่าอุปกรณ์": 16380.14,
+            "ค่าสาธารณูปโภค": 5772.1,
+            "อื่นๆ": 3075.98,
+            "ค่าน้ำ-ค่าไฟ": 1881.47,
+            "ค่าน้ำมันอื่นๆ": 467.3,
+            "ค่าส่งไปรษณีย์": 100.0
+        },
+        "byProject": {
+            "Ingredion ขามทะเลสอ": 642347.22,
+            "Admin": 23971.4,
+            "ปลูกมันสำปะหลัง อิทธิ1 และ waxy R": 20927.82
+        },
+        "byActivity": {
+            "งานย้ายไม้": 265979.38,
+            "งานเก็บเกี่ยว-ขุดหัวมัน": 152585.51,
+            "งานเตรียมแปลง": 137478.32,
+            "Admin": 54120.84,
+            "ซ่อมบำรุง": 32898.88,
+            "งานปลูก": 25302.59,
+            "งานเก็บเกี่ยว-ตัดทำลายต้น": 12618.55,
+            "งานจัดการน้ำ": 6262.37
+        }
     }
-  }
 };
 
 /* ──────────────────────────────────────────────────────────
@@ -552,52 +547,51 @@ const PROJ_DETAIL = {
   }
 ,
   "April 2026": {
-      "Admin": {
-          "total": 23971.4,
-          "byCategory": {
-              "ค่าซ่อมบำรุง": 23971.4
-          },
-          "byActivity": {
-              "ซ่อมบำรุง": 23971.4
-          }
-      },
-      "Ingredion ขามทะเลสอ": {
-          "total": 645336.91,
-          "byCategory": {
-              "ค่าจ้าง-ค่าบริการ": 443152.92,
-              "ค่าน้ำมันรถแทรกเตอร์": 104672.96,
-              "ค่าน้ำมันรถยนต์": 35514.04,
-              "ค่าที่พัก": 31000.0,
-              "ค่าอุปกรณ์": 16380.14,
-              "ค่าสาธารณูปโภค": 5772.1,
-              "ค่าซ่อมบำรุง": 3320.0,
-              "ค่าน้ำ-ค่าไฟ": 1881.47,
-              "อื่นๆ": 1875.98,
-              "อื่นๆ-ตรวจสุขภาพ": 1200.0,
-              "ค่าน้ำมันอื่นๆ": 467.29999999999995,
-              "ค่าส่งไปรษณีย์": 100.0
-          },
-          "byActivity": {
-              "งานเตรียมแปลง": 282220.59,
-              "งานเก็บเกี่ยว-ขุดหัวมัน": 152585.51,
-              "งานย้ายไม้": 129896.9,
-              "Admin": 45461.05,
-              "งานเก็บเกี่ยว-ตัดทำลายต้น": 12618.55,
-              "ซ่อมบำรุง": 8927.48,
-              "งานปลูก": 7364.46,
-              "งานจัดการน้ำ": 6262.37
-          }
-      },
-      "ปลูกมันสำปะหลัง อิทธิ1 และ waxy R": {
-          "total": 17938.13,
-          "byCategory": {
-              "ค่าจ้าง-ค่าบริการ": 17938.13
-          },
-          "byActivity": {
-              "งานปลูก": 17938.13
-          }
-      }
-  }
+        "Ingredion ขามทะเลสอ": {
+            "total": 642347.22,
+            "byCategory": {
+                "ค่าจ้าง-ค่าบริการ": 440163.23,
+                "ค่าน้ำมันรถแทรกเตอร์": 104672.96,
+                "ค่าน้ำมันรถยนต์": 35514.04,
+                "ค่าที่พัก": 31000.0,
+                "ค่าอุปกรณ์": 16380.14,
+                "ค่าสาธารณูปโภค": 5772.1,
+                "ค่าซ่อมบำรุง": 3320.0,
+                "อื่นๆ": 3075.98,
+                "ค่าน้ำ-ค่าไฟ": 1881.47,
+                "ค่าน้ำมันอื่นๆ": 467.3,
+                "ค่าส่งไปรษณีย์": 100.0
+            },
+            "byActivity": {
+                "งานย้ายไม้": 265979.38,
+                "งานเก็บเกี่ยว-ขุดหัวมัน": 152585.51,
+                "งานเตรียมแปลง": 137478.32,
+                "Admin": 54120.84,
+                "งานเก็บเกี่ยว-ตัดทำลายต้น": 12618.55,
+                "ซ่อมบำรุง": 8927.48,
+                "งานจัดการน้ำ": 6262.37,
+                "งานปลูก": 4374.77
+            }
+        },
+        "Admin": {
+            "total": 23971.4,
+            "byCategory": {
+                "ค่าซ่อมบำรุง": 23971.4
+            },
+            "byActivity": {
+                "ซ่อมบำรุง": 23971.4
+            }
+        },
+        "ปลูกมันสำปะหลัง อิทธิ1 และ waxy R": {
+            "total": 20927.82,
+            "byCategory": {
+                "ค่าจ้าง-ค่าบริการ": 20927.82
+            },
+            "byActivity": {
+                "งานปลูก": 20927.82
+            }
+        }
+    }
 };
 
 /* ── Constants ── */
@@ -937,6 +931,11 @@ function renderTrend() {
   const projTotals={};
   allProjs.forEach(p=>{ projTotals[p]=MONTHS_ORDER.reduce((s,m)=>s+(ACTUAL[m].byProject[p]||0),0); });
   const sortedProjs=allProjs.sort((a,b)=>projTotals[b]-projTotals[a]);
+
+  // Rebuild proj-compare header dynamically from MONTHS_ORDER
+  const projHead=document.getElementById('proj-compare-head');
+  const thNames={'January 2026':'มกราคม','February 2026':'กุมภาพันธ์','March 2026':'มีนาคม','April 2026':'เมษายน','May 2026':'พฤษภาคม','June 2026':'มิถุนายน','July 2026':'กรกฎาคม','August 2026':'สิงหาคม','September 2026':'กันยายน','October 2026':'ตุลาคม','November 2026':'พฤศจิกายน','December 2026':'ธันวาคม'};
+  projHead.innerHTML='<tr><th>โครงการ</th>'+MONTHS_ORDER.map(m=>`<th class="right">${thNames[m]||m}</th>`).join('')+'<th class="right">รวม YTD</th></tr>';
 
   const tbody3=document.getElementById('proj-compare-body');
   tbody3.innerHTML='';
