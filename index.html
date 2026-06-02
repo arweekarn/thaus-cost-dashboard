@@ -916,15 +916,11 @@ function renderMonth(month) {
           anchor:'start', align:'end', clamp:true,
           formatter:(val, ctx) => {
             const name = ctx.chart.data.labels[ctx.dataIndex];
-            return name + '  ฿' + fmtShort(val);
+            return name + '   ฿' + fmtShort(val);
           },
-          color: ctx => {
-            const val = ctx.dataset.data[ctx.dataIndex];
-            const max = Math.max(...ctx.dataset.data);
-            return val > max * 0.25 ? '#fff' : '#2F353A';
-          },
-          font:{ size:12, weight:'600', family:'inherit' },
-          padding:{ left:8 }
+          color:'#2F353A',
+          font:{ size:12, weight:'700', family:'inherit' },
+          padding:{ left:10 }
         }
       },
       scales: {
@@ -1165,6 +1161,7 @@ function renderYtdProject(proj) {
   // Category chart
   const sortedCats = Object.entries(ytdCat).sort((a,b)=>b[1]-a[1]);
   chartYtdCat = destroyChart(chartYtdCat);
+  chartYtdCat = destroyChart(chartYtdCat);
   chartYtdCat = new Chart(document.getElementById('chart-ytd-cat').getContext('2d'), {
     type: 'bar',
     data: {
@@ -1173,14 +1170,24 @@ function renderYtdProject(proj) {
     },
     options: {
       indexAxis: 'y', responsive: true,
-      plugins: { legend: { display: false },
-        tooltip: { callbacks: { label: ctx => ` ฿${fmt(ctx.parsed.x)}` } }
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ฿${fmt(ctx.parsed.x)}` } },
+        datalabels: {
+          anchor: 'start', align: 'end', clamp: true,
+          formatter: (val, ctx) => ctx.chart.data.labels[ctx.dataIndex] + '   ฿' + fmtShort(val),
+          color: '#2F353A',
+          font: { size: 11, weight: '700', family: 'inherit' },
+          padding: { left: 8 }
+        }
       },
       scales: {
-        x: { ticks: { callback: v => '฿'+fmtShort(v) }, grid: { color:'#F0F2F0' } },
-        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
-      }
-    }
+        x: { ticks: { display: false }, grid: { display: false }, border: { display: false } },
+        y: { ticks: { display: false }, grid: { display: false }, border: { display: false } }
+      },
+      layout: { padding: { right: 12 } }
+    },
+    plugins: [ChartDataLabels]
   });
 
   // Monthly trend chart
