@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Thaus — Cost Dashboard YTD 2026</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <style>
   /* ── CTA Brand Palette ──
      #008C4A  brand green   — accents, active states, positive indicators
@@ -189,6 +190,23 @@
     .charts-grid { grid-template-columns: 1fr; }
     .header { padding: 16px 16px 0; }
   }
+
+  /* YTD project drill-down */
+  .ytd-proj-buttons { display:flex; flex-wrap:wrap; gap:8px; margin:20px 0 12px; }
+  .ytd-proj-btn {
+    padding:6px 14px; border:2px solid #2F7A4F; border-radius:20px;
+    background:#fff; color:#2F7A4F; font-size:13px; cursor:pointer;
+    font-family:inherit; font-weight:600; transition:all .15s;
+  }
+  .ytd-proj-btn:hover { background:#E8F5EE; }
+  .ytd-proj-btn.active { background:#2F7A4F; color:#fff; }
+  .ytd-proj-detail { display:none; }
+  .ytd-proj-detail.visible { display:block; }
+  .ytd-proj-summary { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
+  .ytd-proj-kpi { background:#F8FAF8; border:1px solid #D0E8DA; border-radius:8px; padding:12px 20px; min-width:140px; }
+  .ytd-proj-kpi .label { font-size:11px; color:#6B7A6E; text-transform:uppercase; letter-spacing:.5px; }
+  .ytd-proj-kpi .value { font-size:20px; font-weight:800; color:#2F7A4F; margin-top:2px; }
+
 </style>
 </head>
 <body>
@@ -199,13 +217,14 @@
       <h1>Operations Cost Dashboard</h1>
       <div class="subtitle">บริษัท ธาอัส จำกัด — YTD 2026</div>
     </div>
-    <div class="updated">Updated: April 2026</div>
+    <div class="updated">Updated: May 2026</div>
   </div>
   <div class="tabs">
     <button class="tab" onclick="setMonth('January 2026')">January 2026</button>
     <button class="tab" onclick="setMonth('February 2026')">February 2026</button>
     <button class="tab" onclick="setMonth('March 2026')">March 2026</button>
-    <button class="tab active" onclick="setMonth('April 2026')">April 2026</button>
+    <button class="tab" onclick="setMonth('April 2026')">April 2026</button>
+    <button class="tab active" onclick="setMonth('May 2026')">May 2026</button>
     <button class="tab trend-tab" onclick="setMonth('__trend__')">YTD</button>
   </div>
 </div>
@@ -294,6 +313,43 @@
         <tbody id="proj-compare-body"></tbody>
       </table>
     </div>
+
+    <div class="table-card" style="margin-top:20px;">
+      <div class="chart-title">รายละเอียดค่าใช้จ่าย YTD แยกตามโครงการ</div>
+      <div class="ytd-proj-buttons" id="ytd-proj-buttons"></div>
+      <div id="ytd-proj-detail" class="ytd-proj-detail">
+        <div class="ytd-proj-summary" id="ytd-proj-kpis"></div>
+        <div class="charts-grid" style="margin-bottom:16px;">
+          <div class="chart-card">
+            <div class="chart-title" id="ytd-cat-title">หมวดค่าใช้จ่าย YTD</div>
+            <canvas id="chart-ytd-cat"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title" id="ytd-trend-title">แนวโน้มรายเดือน</div>
+            <canvas id="chart-ytd-proj-trend"></canvas>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <table id="ytd-cat-table" style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="background:#F0F7F3;">
+              <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #C8E0D0;">หมวดค่าใช้จ่าย</th>
+              <th style="padding:8px 12px;text-align:right;border-bottom:2px solid #C8E0D0;">ยอด YTD (บาท)</th>
+              <th style="padding:8px 12px;text-align:right;border-bottom:2px solid #C8E0D0;">%</th>
+            </tr></thead>
+            <tbody id="ytd-cat-body"></tbody>
+          </table>
+          <table id="ytd-act-table" style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="background:#F0F7F3;">
+              <th style="padding:8px 12px;text-align:left;border-bottom:2px solid #C8E0D0;">กิจกรรม</th>
+              <th style="padding:8px 12px;text-align:right;border-bottom:2px solid #C8E0D0;">ยอด YTD (บาท)</th>
+              <th style="padding:8px 12px;text-align:right;border-bottom:2px solid #C8E0D0;">%</th>
+            </tr></thead>
+            <tbody id="ytd-act-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -409,6 +465,38 @@ const ACTUAL = {
             "งานจัดการน้ำ": 6262.37
         }
     }
+,
+  "May 2026": {
+    "total": 909154.49,
+    "byCategory": {
+      "ค่าจ้าง-ค่าบริการ": 731743.05,
+      "ค่าน้ำมันรถแทรกเตอร์": 64672.94,
+      "ค่าน้ำมันรถยนต์": 38785.07,
+      "ค่าที่พัก": 31000.0,
+      "ค่าซ่อมบำรุง": 19944.57,
+      "ค่าอุปกรณ์": 7102.83,
+      "ค่าสาธารณูปโภค": 6155.99,
+      "อื่นๆ": 3438.58,
+      "ค่าสารเคมี-ยา": 2925.0,
+      "ค่าน้ำมันอื่นๆ": 1757.04,
+      "ค่าน้ำ-ค่าไฟ": 1294.42,
+      "ค่าส่งไปรษณีย์": 335.0
+},
+    "byProject": {
+      "Ingredion ขามทะเลสอ": 876990.69,
+      "CR1 FarmingService": 12745.32,
+      "ปลูกมันสำปะหลัง อิทธิ1 และ waxy R": 9496.91,
+      "Admin": 6930.91,
+      "KingCorn สระบุรี": 2990.66
+},
+    "byActivity": {
+      "งานปลูก": 820170.01,
+      "Admin": 49729.7,
+      "ซ่อมบำรุง": 29556.87,
+      "งาานกำจัดวัชพืช": 9496.91,
+      "(ไม่ระบุ)": 201.0
+}
+  }
 };
 
 /* ──────────────────────────────────────────────────────────
@@ -592,10 +680,75 @@ const PROJ_DETAIL = {
             }
         }
     }
+,
+  "May 2026": {
+    "Admin": {
+        "total": 6930.91,
+        "byCategory": {
+            "ค่าซ่อมบำรุง": 6729.91,
+            "ค่าส่งไปรษณีย์": 201.0
+        },
+        "byActivity": {
+            "ซ่อมบำรุง": 6729.91,
+            "(ไม่ระบุ)": 201.0
+        }
+    },
+    "CR1 FarmingService": {
+        "total": 12745.32,
+        "byCategory": {
+            "ค่าซ่อมบำรุง": 9007.0,
+            "ค่าน้ำมันรถยนต์": 3738.32
+        },
+        "byActivity": {
+            "ซ่อมบำรุง": 12745.32
+        }
+    },
+    "Ingredion ขามทะเลสอ": {
+        "total": 876990.69,
+        "byCategory": {
+            "ค่าจ้าง-ค่าบริการ": 722246.14,
+            "ค่าน้ำมันรถแทรกเตอร์": 63551.44,
+            "ค่าน้ำมันรถยนต์": 33177.59,
+            "ค่าที่พัก": 31000.0,
+            "ค่าอุปกรณ์": 7102.83,
+            "ค่าสาธารณูปโภค": 6155.99,
+            "ค่าซ่อมบำรุง": 4207.66,
+            "อื่นๆ": 3438.58,
+            "ค่าสารเคมี-ยา": 2925.0,
+            "ค่าน้ำมันอื่นๆ": 1757.04,
+            "ค่าน้ำ-ค่าไฟ": 1294.42,
+            "ค่าส่งไปรษณีย์": 134.0
+        },
+        "byActivity": {
+            "งานปลูก": 820170.01,
+            "Admin": 49729.7,
+            "ซ่อมบำรุง": 7090.98
+        }
+    },
+    "KingCorn สระบุรี": {
+        "total": 2990.66,
+        "byCategory": {
+            "ค่าน้ำมันรถยนต์": 1869.16,
+            "ค่าน้ำมันรถแทรกเตอร์": 1121.5
+        },
+        "byActivity": {
+            "ซ่อมบำรุง": 2990.66
+        }
+    },
+    "ปลูกมันสำปะหลัง อิทธิ1 และ waxy R": {
+        "total": 9496.91,
+        "byCategory": {
+            "ค่าจ้าง-ค่าบริการ": 9496.91
+        },
+        "byActivity": {
+            "งาานกำจัดวัชพืช": 9496.91
+        }
+    }
+}
 };
 
 /* ── Constants ── */
-const MONTHS_ORDER = ["January 2026","February 2026","March 2026","April 2026"];
+const MONTHS_ORDER = ["January 2026","February 2026","March 2026","April 2026","May 2026"];
 const TOP_CATS = [
   "ค่าจ้าง-ค่าบริการ","ค่าซ่อมบำรุง","ค่าน้ำมันรถยนต์","ค่าที่พัก",
   "ค่าอุปกรณ์","ค่าน้ำมันรถแทรกเตอร์","ค่าขนย้าย","ค่าเครื่องมือ-อุปกรณ์ต่อพ่วง"
@@ -610,7 +763,7 @@ const CHART_COLORS = [
 ];
 
 /* ── State ── */
-let selectedMonth   = 'April 2026';
+let selectedMonth   = 'May 2026';
 let selectedProject = 'all';
 let chartProject = null, chartActivity = null;
 let chartTrendLine = null, chartCatCompare = null;
@@ -758,13 +911,29 @@ function renderMonth(month) {
       responsive:true, indexAxis:'y',
       plugins: {
         legend:{ display:false },
-        tooltip:{ callbacks:{ label:(ctx)=>` ฿${fmt(ctx.parsed.x)}` } }
+        tooltip:{ callbacks:{ label:(ctx)=>` ฿${fmt(ctx.parsed.x)}` } },
+        datalabels:{
+          anchor:'start', align:'end', clamp:true,
+          formatter:(val, ctx) => {
+            const name = ctx.chart.data.labels[ctx.dataIndex];
+            return name + '  ฿' + fmtShort(val);
+          },
+          color: ctx => {
+            const val = ctx.dataset.data[ctx.dataIndex];
+            const max = Math.max(...ctx.dataset.data);
+            return val > max * 0.25 ? '#fff' : '#2F353A';
+          },
+          font:{ size:12, weight:'600', family:'inherit' },
+          padding:{ left:8 }
+        }
       },
       scales: {
-        x:{ ticks:{ callback:v=>'฿'+fmtShort(v) }, grid:{ color:'#F0F2F0' } },
-        y:{ ticks:{ font:{size:11} } }
-      }
-    }
+        x:{ ticks:{ display:false }, grid:{ display:false }, border:{ display:false } },
+        y:{ ticks:{ display:false }, grid:{ display:false }, border:{ display:false } }
+      },
+      layout:{ padding:{ left:4, right:16 } }
+    },
+    plugins:[ChartDataLabels]
   });
 
   /* ── Activity doughnut (top 10, synced with project filter) ── */
@@ -950,6 +1119,149 @@ function renderTrend() {
   totTr.className='total';
   totTr.innerHTML=`<td><strong>รวมทุกโครงการ</strong></td>${gTotals.map(v=>`<td class="right">฿${fmt(v)}</td>`).join('')}<td class="right">฿${fmt(gQ1)}</td>`;
   tbody3.appendChild(totTr);
+
+  buildYtdProjectButtons();
+  if(_ytdSelProj) renderYtdProject(_ytdSelProj);
+}
+
+
+/* ── YTD by Project ── */
+let chartYtdCat = null, chartYtdTrend = null, _ytdSelProj = null;
+
+function renderYtdProject(proj) {
+  _ytdSelProj = proj;
+  // Update button states
+  document.querySelectorAll('.ytd-proj-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.proj === proj);
+  });
+
+  // Aggregate YTD for this project from PROJ_DETAIL
+  const ytdCat = {}, ytdAct = {};
+  let ytdTotal = 0;
+  MONTHS_ORDER.forEach(m => {
+    const pd = (PROJ_DETAIL[m] || {})[proj];
+    if (!pd) return;
+    ytdTotal += pd.total || 0;
+    Object.entries(pd.byCategory || {}).forEach(([k,v]) => { ytdCat[k] = (ytdCat[k]||0) + v; });
+    Object.entries(pd.byActivity || {}).forEach(([k,v]) => { ytdAct[k] = (ytdAct[k]||0) + v; });
+  });
+
+  // Monthly trend for this project
+  const monthlyVals = MONTHS_ORDER.map(m => (ACTUAL[m].byProject[proj] || 0));
+
+  // KPIs
+  const kpiEl = document.getElementById('ytd-proj-kpis');
+  const avgMo = ytdTotal / MONTHS_ORDER.filter(m => (ACTUAL[m].byProject[proj]||0) > 0).length || 0;
+  kpiEl.innerHTML = `
+    <div class="ytd-proj-kpi"><div class="label">ยอดรวม YTD</div><div class="value">฿${fmt(ytdTotal)}</div></div>
+    <div class="ytd-proj-kpi"><div class="label">เฉลี่ย/เดือน</div><div class="value">฿${fmt(avgMo)}</div></div>
+    <div class="ytd-proj-kpi"><div class="label">หมวด</div><div class="value">${Object.keys(ytdCat).length}</div></div>
+    <div class="ytd-proj-kpi"><div class="label">กิจกรรม</div><div class="value">${Object.keys(ytdAct).length}</div></div>
+  `;
+
+  document.getElementById('ytd-cat-title').textContent = `หมวดค่าใช้จ่าย YTD — ${proj}`;
+  document.getElementById('ytd-trend-title').textContent = `แนวโน้มรายเดือน — ${proj}`;
+
+  // Category chart
+  const sortedCats = Object.entries(ytdCat).sort((a,b)=>b[1]-a[1]);
+  chartYtdCat = destroyChart(chartYtdCat);
+  chartYtdCat = new Chart(document.getElementById('chart-ytd-cat').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: sortedCats.map(([k])=>k),
+      datasets: [{ data: sortedCats.map(([,v])=>v), backgroundColor: CHART_COLORS, borderRadius: 3 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ฿${fmt(ctx.parsed.x)}` } }
+      },
+      scales: {
+        x: { ticks: { callback: v => '฿'+fmtShort(v) }, grid: { color:'#F0F2F0' } },
+        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+
+  // Monthly trend chart
+  const thN = {'January 2026':'ม.ค.','February 2026':'ก.พ.','March 2026':'มี.ค.','April 2026':'เม.ย.','May 2026':'พ.ค.','June 2026':'มิ.ย.','July 2026':'ก.ค.','August 2026':'ส.ค.','September 2026':'ก.ย.','October 2026':'ต.ค.','November 2026':'พ.ย.','December 2026':'ธ.ค.'};
+  chartYtdTrend = destroyChart(chartYtdTrend);
+  chartYtdTrend = new Chart(document.getElementById('chart-ytd-proj-trend').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: MONTHS_ORDER.map(m => thN[m] || m),
+      datasets: [{
+        label: proj, data: monthlyVals,
+        borderColor: '#2F7A4F', backgroundColor: 'rgba(47,122,79,0.08)',
+        fill: true, tension: 0.3,
+        pointBackgroundColor: '#2F7A4F', pointRadius: 5, borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ฿${fmt(ctx.parsed.y)}` } }
+      },
+      scales: {
+        y: { ticks: { callback: v => '฿'+fmtShort(v) }, grid: { color: '#F0F2F0' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // Category table
+  const catBody = document.getElementById('ytd-cat-body');
+  catBody.innerHTML = '';
+  sortedCats.forEach(([k,v], i) => {
+    const pct = ytdTotal > 0 ? (v/ytdTotal*100).toFixed(1) : 0;
+    const tr = document.createElement('tr');
+    tr.style.background = i%2===0 ? '#FAFCFA' : '#fff';
+    tr.innerHTML = `<td style="padding:7px 12px;border-bottom:1px solid #E8EFE8;">${k}</td>
+      <td style="padding:7px 12px;text-align:right;border-bottom:1px solid #E8EFE8;font-weight:600;">฿${fmt(v)}</td>
+      <td style="padding:7px 12px;text-align:right;border-bottom:1px solid #E8EFE8;color:#6B7A6E;">${pct}%</td>`;
+    catBody.appendChild(tr);
+  });
+  const catTot = document.createElement('tr');
+  catTot.className = 'total';
+  catTot.innerHTML = `<td style="padding:7px 12px;"><strong>รวม</strong></td><td style="padding:7px 12px;text-align:right;"><strong>฿${fmt(ytdTotal)}</strong></td><td style="padding:7px 12px;text-align:right;">100%</td>`;
+  catBody.appendChild(catTot);
+
+  // Activity table
+  const actBody = document.getElementById('ytd-act-body');
+  actBody.innerHTML = '';
+  const sortedActs = Object.entries(ytdAct).sort((a,b)=>b[1]-a[1]);
+  sortedActs.forEach(([k,v], i) => {
+    const pct = ytdTotal > 0 ? (v/ytdTotal*100).toFixed(1) : 0;
+    const tr = document.createElement('tr');
+    tr.style.background = i%2===0 ? '#FAFCFA' : '#fff';
+    tr.innerHTML = `<td style="padding:7px 12px;border-bottom:1px solid #E8EFE8;">${k}</td>
+      <td style="padding:7px 12px;text-align:right;border-bottom:1px solid #E8EFE8;font-weight:600;">฿${fmt(v)}</td>
+      <td style="padding:7px 12px;text-align:right;border-bottom:1px solid #E8EFE8;color:#6B7A6E;">${pct}%</td>`;
+    actBody.appendChild(tr);
+  });
+  const actTot = document.createElement('tr');
+  actTot.className = 'total';
+  actTot.innerHTML = `<td style="padding:7px 12px;"><strong>รวม</strong></td><td style="padding:7px 12px;text-align:right;"><strong>฿${fmt(ytdTotal)}</strong></td><td style="padding:7px 12px;text-align:right;">100%</td>`;
+  actBody.appendChild(actTot);
+
+  document.getElementById('ytd-proj-detail').classList.add('visible');
+}
+
+function buildYtdProjectButtons() {
+  const allProjs = [...new Set(MONTHS_ORDER.flatMap(m => Object.keys(ACTUAL[m].byProject)))];
+  const projTotals = {};
+  allProjs.forEach(p => { projTotals[p] = MONTHS_ORDER.reduce((s,m) => s+(ACTUAL[m].byProject[p]||0), 0); });
+  const sorted = allProjs.sort((a,b) => projTotals[b]-projTotals[a]);
+  const container = document.getElementById('ytd-proj-buttons');
+  container.innerHTML = '';
+  sorted.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'ytd-proj-btn';
+    btn.dataset.proj = p;
+    btn.textContent = p;
+    btn.onclick = () => renderYtdProject(p);
+    container.appendChild(btn);
+  });
 }
 
 /* ── Init ── */
