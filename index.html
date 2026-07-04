@@ -224,7 +224,8 @@
     <button class="tab" onclick="setMonth('February 2026')">February 2026</button>
     <button class="tab" onclick="setMonth('March 2026')">March 2026</button>
     <button class="tab" onclick="setMonth('April 2026')">April 2026</button>
-    <button class="tab active" onclick="setMonth('May 2026')">May 2026</button>
+    <button class="tab" onclick="setMonth('May 2026')">May 2026</button>
+    <button class="tab active" onclick="setMonth('June 2026')">June 2026</button>
     <button class="tab trend-tab" onclick="setMonth('__trend__')">YTD</button>
   </div>
 </div>
@@ -497,6 +498,40 @@ const ACTUAL = {
       "(ไม่ระบุ)": 201.0
 }
   }
+,
+  "June 2026": {
+    "total": 466590.2,
+    "byCategory": {
+      "ค่าจ้าง-ค่าบริการ": 307514.38,
+      "ค่าน้ำมันรถยนต์": 44565.45,
+      "ค่าซ่อมบำรุง": 33866.44,
+      "ค่าที่พัก": 31450.0,
+      "ค่าน้ำมันรถแทรกเตอร์": 24486.0,
+      "ค่าอุปกรณ์": 14900.47,
+      "ค่าสาธารณูปโภค": 6787.37,
+      "อื่นๆ": 1450.0,
+      "ค่าน้ำ-ค่าไฟ": 1133.26,
+      "ค่าน้ำมันอื่นๆ": 373.83,
+      "ค่าส่งไปรษณีย์": 63.0
+    },
+    "byProject": {
+      "Ingredion ขามทะเลสอ": 254739.27,
+      "ZoneA ผู้รับเหมา-Ingredion ขามทะเลสอ": 190149.45,
+      "CR1 FarmingService": 11655.56,
+      "ปลูกมันสำปะหลัง อิทธิ1 และ waxy R": 6958.76,
+      "CNHI นครสวรรค์": 2587.16,
+      "Admin": 500.0
+    },
+    "byActivity": {
+      "งานดูแลแปลง": 321055.01,
+      "Admin": 50190.73,
+      "งานซ่อมบำรุง": 43835.4,
+      "งานจัดการวัชพืช": 34706.18,
+      "งานทำรุ่น": 12566.24,
+      "งานซ่อมบำรุง จ.ชัยภูมิ": 2587.16,
+      "งานพ่นยา": 1649.48
+    }
+  }
 };
 
 /* ──────────────────────────────────────────────────────────
@@ -745,10 +780,43 @@ const PROJ_DETAIL = {
         }
     }
 }
+,
+  "June 2026": {
+    "Ingredion ขามทะเลสอ": {
+      "total": 254739.27,
+      "byCategory": {"ค่าจ้าง-ค่าบริการ": 110406.17, "ค่าน้ำมันรถยนต์": 42696.29, "ค่าที่พัก": 31000.0, "ค่าน้ำมันรถแทรกเตอร์": 24486.0, "ค่าซ่อมบำรุง": 21442.88, "ค่าอุปกรณ์": 14900.47, "ค่าสาธารณูปโภค": 6787.37, "อื่นๆ": 1450.0, "ค่าน้ำ-ค่าไฟ": 1133.26, "ค่าน้ำมันอื่นๆ": 373.83, "ค่าส่งไปรษณีย์": 63.0},
+      "byActivity": {"งานดูแลแปลง": 167261.22, "Admin": 50190.73, "งานซ่อมบำรุง": 31679.84, "งานทำรุ่น": 5607.48}
+    },
+    "ZoneA ผู้รับเหมา-Ingredion ขามทะเลสอ": {
+      "total": 190149.45,
+      "byCategory": {"ค่าจ้าง-ค่าบริการ": 190149.45},
+      "byActivity": {"งานดูแลแปลง": 153793.79, "งานจัดการวัชพืช": 34706.18, "งานพ่นยา": 1649.48}
+    },
+    "CR1 FarmingService": {
+      "total": 11655.56,
+      "byCategory": {"ค่าซ่อมบำรุง": 11655.56},
+      "byActivity": {"งานซ่อมบำรุง": 11655.56}
+    },
+    "ปลูกมันสำปะหลัง อิทธิ1 และ waxy R": {
+      "total": 6958.76,
+      "byCategory": {"ค่าจ้าง-ค่าบริการ": 6958.76},
+      "byActivity": {"งานทำรุ่น": 6958.76}
+    },
+    "CNHI นครสวรรค์": {
+      "total": 2587.16,
+      "byCategory": {"ค่าน้ำมันรถยนต์": 1869.16, "ค่าที่พัก": 450.0, "ค่าซ่อมบำรุง": 268.0},
+      "byActivity": {"งานซ่อมบำรุง จ.ชัยภูมิ": 2587.16}
+    },
+    "Admin": {
+      "total": 500.0,
+      "byCategory": {"ค่าซ่อมบำรุง": 500.0},
+      "byActivity": {"งานซ่อมบำรุง": 500.0}
+    }
+  }
 };
 
 /* ── Constants ── */
-const MONTHS_ORDER = ["January 2026","February 2026","March 2026","April 2026","May 2026"];
+const MONTHS_ORDER = ["January 2026","February 2026","March 2026","April 2026","May 2026", "June 2026"];
 const TOP_CATS = [
   "ค่าจ้าง-ค่าบริการ","ค่าซ่อมบำรุง","ค่าน้ำมันรถยนต์","ค่าที่พัก",
   "ค่าอุปกรณ์","ค่าน้ำมันรถแทรกเตอร์","ค่าขนย้าย","ค่าเครื่องมือ-อุปกรณ์ต่อพ่วง"
@@ -763,7 +831,7 @@ const CHART_COLORS = [
 ];
 
 /* ── State ── */
-let selectedMonth   = 'May 2026';
+let selectedMonth   = 'June 2026';
 let selectedProject = 'all';
 let chartProject = null, chartActivity = null;
 let chartTrendLine = null, chartCatCompare = null;
@@ -1276,4 +1344,4 @@ buildProjectFilter();
 setMonth('March 2026');
 </script>
 </body>
-</html>
+</html><button class="tab" onclick="setMonth('June 2026')">June 2026</button>
